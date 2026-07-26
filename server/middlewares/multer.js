@@ -1,17 +1,19 @@
-import fs from 'fs'
 import multer from 'multer'
+import { v2 as cloudinary } from 'cloudinary'
+import { CloudinaryStorage } from 'multer-storage-cloudinary'
 
-const uploadDir = './uploads'
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true })
-}
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+})
 
-const storage = multer.diskStorage({
-  destination: function (req, file, callback) {
-    callback(null, uploadDir)
-  },
-  filename: function (req, file, callback) {
-    callback(null, `${Date.now()}_${file.originalname}`)
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'bg-removal',
+    format: async (req, file) => 'png',
+    public_id: (req, file) => `${Date.now()}_${file.originalname.split('.')[0]}`,
   },
 })
 

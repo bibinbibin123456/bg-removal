@@ -1,6 +1,5 @@
 import axios from 'axios'
-import fs from 'fs'
-import formData from 'form-data'
+import FormData from 'form-data'
 import userModel from '../models/userModel.js'
 
 // controller function to remove bg from image
@@ -19,12 +18,11 @@ export const removeBg = async (req, res) => {
       return res.json({ success: false, message: 'No credit balance', credits: user.credits })
     }
 
-   const imagePath=req.file.path;
-   //reading Image file
-const imageFile =fs.createReadStream(imagePath)
+    // Get image URL from Cloudinary
+    const imageUrl = req.file.path
 
-const formdata = new formData()
-    formdata.append('image_file', imageFile)
+    const formdata = new FormData()
+    formdata.append('image_url', imageUrl)
 
     const { data } = await axios.post('https://clipdrop-api.co/remove-background/v1', formdata, {
       headers: {
@@ -35,7 +33,7 @@ const formdata = new formData()
     })
 
     const base64Image = Buffer.from(data, 'binary').toString('base64')
-    const resultImage = `data:${req.file.mimetype};base64,${base64Image}`
+    const resultImage = `data:image/png;base64,${base64Image}`
     const updatedCredits = user.credits - 1
 
     await userModel.findByIdAndUpdate(user._id, { credits: updatedCredits })
