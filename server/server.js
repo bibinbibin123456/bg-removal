@@ -35,7 +35,27 @@ const corsOptions = {
 //initialize  middlewares
 app.use(express.json())
 app.use(cors(corsOptions))
-app.options(/.*/, cors(corsOptions))
+// log incoming requests (helps debug CORS/preflight on deployments)
+app.use((req, res, next) => {
+  try {
+    console.log(`${new Date().toISOString()} ${req.method} ${req.originalUrl} Origin:${req.headers.origin}`)
+  } catch (e) {
+    // ignore logging errors
+  }
+  next()
+})
+
+// explicit preflight response to avoid redirects on OPTIONS
+app.options(/.*/, (req, res) => {
+  const origin = req.headers.origin
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin)
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', req.headers['access-control-request-headers'] || 'Content-Type, Authorization, X-Requested-With')
+  res.setHeader('Access-Control-Allow-Credentials', 'true')
+  return res.sendStatus(204)
+})
 
 //api routes
 app.get('/',(req,res)=>res.send("Api Working"))
