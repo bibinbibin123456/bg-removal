@@ -35,7 +35,7 @@ const corsOptions = {
 //initialize  middlewares
 app.use(express.json())
 app.use(cors(corsOptions))
-app.options('*', cors(corsOptions))
+app.options(/.*/, cors(corsOptions))
 
 //api routes
 app.get('/',(req,res)=>res.send("Api Working"))
