@@ -1,8 +1,120 @@
-import React from 'react'
+import React, { useContext, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
 import assets from '../assets/assets.jpg'
 import plans from '../assets/plans.js'
+import axios from 'axios'
+import { AppContext } from '../context/AppContext'
 
 const BuyCredit = () => {
+
+  const {backendUrl, loadCreditsData, user}= useContext(AppContext)
+
+  const navigate= useNavigate()
+
+  const token = localStorage.getItem("token")
+  const [creatingOrderFor, setCreatingOrderFor] = useState(null)
+
+  const initPay = async (order) => {
+    const options = {
+      key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+      amount: order.amount,
+      currency: order.currency,
+      name: 'Credits Payments',
+      description: 'Credits Payments',
+      order_id: order.id,
+      receipt: order.receipt,
+      handler: async (response) => {
+        console.log('razorpay response', response);
+        try {
+          const { data } = await axios.post(
+            backendUrl + '/api/user/verify-payment',
+            response,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          if (data.success) {
+            loadCreditsData();
+            navigate('/');
+            toast.success('Credit Added');
+          } else {
+            toast.error(data.message || 'Payment verification failed');
+          }
+        } catch (error) {
+          console.log(error);
+          toast.error(error.response?.data?.message || error.message);
+        }
+      },
+      modal: {
+        ondismiss: () => {
+          toast.info('Payment cancelled by user');
+        },
+      },
+      prefill: {
+        email: user?.email || '',
+      },
+      theme: {
+        color: '#6D28D9',
+      },
+    };
+
+    if (!window.Razorpay) {
+      toast.error('Payment gateway not loaded. Try again later.');
+      return;
+    }
+
+    const rzp = new window.Razorpay(options);
+    rzp.on('payment.failed', function (response) {
+      console.error('Razorpay payment failed', response.error);
+      toast.error(response.error?.description || 'Payment failed. Please try again.');
+    });
+    rzp.open();
+  };
+  const paymentRazorpay = async (planId) => {
+    if (!token) {
+      toast.info('Please sign in to purchase credits');
+      navigate('/signIn');
+      return;
+    }
+
+    // map numeric plan ids to server-side plan keys
+    const planMap = {
+      1: 'Basic',
+      2: 'Pro',
+      3: 'Premium',
+    };
+    const planKey = planMap[planId] || planId;
+
+    setCreatingOrderFor(planId)
+    try {
+      const { data } = await axios.post(
+        backendUrl + '/api/user/create-order',
+        { planId: planKey },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (data.success && data.order) {
+        console.log('order created', data.order);
+        toast.info('Payment order created. Opening checkout...');
+        initPay(data.order);
+      } else {
+        toast.error(data.message || 'Unable to create payment order');
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error.response?.data?.message || error.message || 'Payment failed');
+    } finally {
+      setCreatingOrderFor(null)
+    }
+  };
   return (
     <div className="min-h-[80vh] bg-gray-50 py-16 px-6">
   {/* Heading */}
@@ -42,21 +154,14 @@ const BuyCredit = () => {
           {item.price}
         </h3>
 
-        <p className="text-gray-600 mt-2">
-          {item.credits} Credits
-        </p>
+        <p className="text-gray-600 mt-2">{item.credits}</p>
 
-        <ul className="mt-6 space-y-2 text-left">
-          {item.features.map((feature, index) => (
-            <li key={index} className="flex items-center gap-2 text-gray-700">
-              <span className="text-green-500">✔</span>
-              {feature}
-            </li>
-          ))}
-        </ul>
-
-        <button className="w-full mt-8 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-blue-500 text-white font-semibold hover:scale-105 transition duration-300">
-          Purchase
+        <button
+          onClick={() => paymentRazorpay(item.id)}
+          disabled={creatingOrderFor === item.id}
+          className={`w-full mt-8 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-blue-500 text-white font-semibold transition duration-300 ${creatingOrderFor === item.id ? 'opacity-70 cursor-not-allowed' : 'hover:scale-105'}`}
+        >
+          {creatingOrderFor === item.id ? 'Processing...' : 'Purchase'}
         </button>
       </div>
     ))}

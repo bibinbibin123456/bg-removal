@@ -15,8 +15,14 @@ const AppContextProvider = (props) => {
 
     const [image, setImage] = useState(false);
     const [resultImage,setResultImage]= useState(false)
+    const [isRemovingBg, setIsRemovingBg] = useState(false);
 
     const [token, setToken] = useState(localStorage.getItem("token") || "");
+
+    const getAuthHeaders = () => {
+        const authToken = localStorage.getItem("token")?.trim() || token;
+        return authToken ? { Authorization: `Bearer ${authToken}` } : {};
+    };
 
     const loadCreditsData = async () => {
 
@@ -27,9 +33,7 @@ const AppContextProvider = (props) => {
             const { data } = await axios.get(
                 `${backendUrl}/api/user/credits`,
                 {
-                    headers: {
-                        token,
-                    },
+                    headers: getAuthHeaders(),
                 }
             );
 
@@ -53,31 +57,49 @@ const AppContextProvider = (props) => {
                 return;
             }
 
+            if (!image) {
+                toast.error('Please select an image first.');
+                return;
+            }
+
+            setIsRemovingBg(true);
             setImage(image);
             setResultImage(false);
-            navigate('/result');
 
+            const formData = new FormData();
+            formData.append("image", image);
 
-            const token= await getToken()
+            const { data } = await axios.post(
+                backendUrl + "/api/image/remove-bg",
+                formData,
+                {
+                    headers: {
+                        ...getAuthHeaders(),
+                        Accept: "application/json",
+                    },
+                }
+            );
 
-            const formData=new formData()
-            image && formData.append('image',image)
-
-            const {data}= await axios.post(backendUrl+'/api/image/remove-bg',formData,{headers:[token]})
-
-            if(data.success){
-                setResultImage(data.resultImage)
-                data.creditBalance && setCredit(data.creditBalance)
-            }else{
-                toast.error(data.message)
-                data.creditBalance && setCredit(data.creditBalance)
-                if(data.creditBalance===0){
-                    navigate('/buy')
+            if (data.success) {
+                setResultImage(data.resultImage);
+                if (typeof data.credits === 'number') {
+                    setCredit(data.credits);
+                }
+                navigate('/result');
+            } else {
+                toast.error(data.message);
+                if (typeof data.credits === 'number') {
+                    setCredit(data.credits);
+                }
+                if (data.credits === 0) {
+                    navigate('/buy');
                 }
             }
         } catch (error) {
             console.log(error);
             toast.error(error.response?.data?.message || error.message);
+        } finally {
+            setIsRemovingBg(false);
         }
     };
 
@@ -88,9 +110,7 @@ const AppContextProvider = (props) => {
             const { data } = await axios.get(
                 `${backendUrl}/api/user/profile`,
                 {
-                    headers: {
-                        token,
-                    },
+                    headers: getAuthHeaders(),
                 }
             );
 
@@ -132,6 +152,7 @@ const AppContextProvider = (props) => {
         setImage,
         resultImage,
         setResultImage,
+        isRemovingBg,
         removeBg,
         
     };

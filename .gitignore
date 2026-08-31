@@ -2,3 +2,5 @@
 /client/node_module
 
 .env
+**/.env
+**/.env.*

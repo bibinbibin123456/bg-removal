@@ -1,10 +1,29 @@
 @import "tailwindcss";
 
+:root {
+  color-scheme: light;
+  font-family: Inter, "Segoe UI", Roboto, sans-serif;
+}
 
-.slider::-webkit-slider-thumb{appearance: none;
-    width: 30px;
-    min-height: 30px;
-    
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: #f8fbff;
+  color: #0f172a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::selection {
+  background: rgba(59, 130, 246, 0.25);
+}
+
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 30px;
+  min-height: 30px;
 }
 
 

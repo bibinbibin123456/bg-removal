@@ -5,7 +5,7 @@ import { useContext } from 'react'
 import { AppContext } from '../context/AppContext'
 
 const Header = () => {
-  const {removeBg}= useContext(AppContext)
+  const { removeBg, isRemovingBg } = useContext(AppContext)
   return (
     <div className="flex flex-col-reverse lg:flex-row items-center justify-between px-6 md:px-12 lg:px-24 xl:px-36 py-12 gap-12">
 
@@ -22,7 +22,7 @@ const Header = () => {
     </p>
 
     <div className="mt-8">
-      <input onChange={e=>removeBg(e.target.files[0])}
+      <input onChange={e => !isRemovingBg && removeBg(e.target.files[0])}
         type="file"
         accept='image/*'
         id="imageUpload"
@@ -30,11 +30,14 @@ const Header = () => {
       />
 
       <label
-        htmlFor="imageUpload"
-        className="inline-flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full cursor-pointer transition duration-300 shadow-lg hover:shadow-xl"
+        htmlFor={!isRemovingBg ? "imageUpload" : ""}
+        className={`inline-flex items-center gap-3 bg-blue-600 ${isRemovingBg ? 'opacity-70 cursor-not-allowed pointer-events-none' : 'hover:bg-blue-700'} text-white px-6 py-3 rounded-full transition duration-300 shadow-lg ${isRemovingBg ? '' : 'hover:shadow-xl'}`}
       >
         <img src={upload} alt="Upload" className="w-5 h-5" />
-        <span className="font-medium">Upload your image</span>
+        <span className="inline-flex items-center gap-2 font-medium">
+          {isRemovingBg && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
+          {isRemovingBg ? 'Processing image...' : 'Upload your image'}
+        </span>
       </label>
     </div>
   </div>
