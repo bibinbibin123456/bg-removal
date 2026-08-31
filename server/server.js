@@ -80,8 +80,28 @@ app.use(express.json());
 
 app.use(cors(corsOptions));
 
-// Explicit preflight handling
-app.options("*", cors(corsOptions));
+// Explicit preflight handling for Express 5
+app.options(/.*/, (req, res) => {
+  const origin = req.headers.origin;
+
+  if (origin && isAllowedOrigin(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+  );
+
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    req.headers["access-control-request-headers"] ||
+      "Content-Type, Authorization, X-Requested-With, token"
+  );
+
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  return res.sendStatus(204);
+});
 
 // Request logging
 app.use((req, res, next) => {
