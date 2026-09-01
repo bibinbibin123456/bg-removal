@@ -47,14 +47,7 @@ const isAllowedOrigin = (origin) => {
 };
 
 const corsOptions = {
-  origin: (origin, callback) => {
-    if (isAllowedOrigin(origin)) {
-      callback(null, true);
-      return;
-    }
-
-    callback(null, true);
-  },
+  origin: true,
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: [
@@ -72,7 +65,7 @@ app.use(cors(corsOptions));
 app.options(/.*/, (req, res) => {
   const origin = req.headers.origin;
 
-  if (origin && isAllowedOrigin(origin)) {
+  if (origin) {
     res.setHeader("Access-Control-Allow-Origin", origin);
   }
 
