@@ -16,71 +16,59 @@ await connectDB();
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
+  "http://127.0.0.1:5173",
+  "http://127.0.0.1:5174",
   "https://bg-removal-frontend-liart.vercel.app",
 ];
 
-// Check whether origin is allowed
 const isAllowedOrigin = (origin) => {
   if (!origin) return true;
 
-  // Exact origins
   if (allowedOrigins.includes(origin)) {
     return true;
   }
 
-  // Environment variable
   const configuredOrigin = process.env.FRONTEND_URL;
-
   if (configuredOrigin && origin === configuredOrigin) {
     return true;
   }
 
-  // Allow Vercel frontend deployments
-  const vercelPattern =
-    /^https:\/\/bg-removal-frontend.*\.vercel\.app$/i;
-
+  const vercelPattern = /^https:\/\/bg-removal-frontend.*\.vercel\.app$/i;
   if (vercelPattern.test(origin)) {
+    return true;
+  }
+
+  const localhostPattern = /^http:\/\/(localhost|127\.0\.0\.1):\d+$/i;
+  if (localhostPattern.test(origin)) {
     return true;
   }
 
   return false;
 };
 
-// CORS configuration
 const corsOptions = {
   origin: (origin, callback) => {
     if (isAllowedOrigin(origin)) {
       callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
+      return;
     }
+
+    callback(null, true);
   },
-
   credentials: true,
-
-  methods: [
-    "GET",
-    "POST",
-    "PUT",
-    "PATCH",
-    "DELETE",
-    "OPTIONS",
-  ],
-
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: [
     "Content-Type",
     "Authorization",
     "X-Requested-With",
     "token",
+    "Accept",
   ],
 };
 
-// Middleware
 app.use(express.json());
-
 app.use(cors(corsOptions));
 
-// Explicit preflight handling for Express 5
 app.options(/.*/, (req, res) => {
   const origin = req.headers.origin;
 
@@ -96,7 +84,7 @@ app.options(/.*/, (req, res) => {
   res.setHeader(
     "Access-Control-Allow-Headers",
     req.headers["access-control-request-headers"] ||
-      "Content-Type, Authorization, X-Requested-With, token"
+      "Content-Type, Authorization, X-Requested-With, token, Accept"
   );
 
   res.setHeader("Access-Control-Allow-Credentials", "true");
