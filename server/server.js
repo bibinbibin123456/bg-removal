@@ -12,9 +12,6 @@ const PORT = process.env.PORT || 4000;
 
 const app = express();
 
-// Connect database
-await connectDB();
-
 // Allowed frontend URLs
 const allowedOrigins = [
   "http://localhost:5173",
@@ -40,8 +37,9 @@ app.use(
 
       return callback(new Error("Not allowed by CORS"));
     },
-
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "token"],
   })
 );
 
@@ -50,14 +48,22 @@ app.use(express.json());
 
 // Test route
 app.get("/", (req, res) => {
-  res.send("Api Working");
+  res.status(200).send("Api Working");
 });
 
 // API routes
 app.use("/api/user", userRouter);
 app.use("/api/image", imageRouter);
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Connect database
+await connectDB();
+
+// Export app for Vercel
+export default app;
+
+// Start server locally
+if (process.env.NODE_ENV !== "production") {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
