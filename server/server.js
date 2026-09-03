@@ -20,8 +20,8 @@ app.use(
   cors({
     origin:"https://bg-removal-frontend-liart.vercel.app",
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "token"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTION"],
+    
   })
 );
 
