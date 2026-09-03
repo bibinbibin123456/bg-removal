@@ -16,8 +16,15 @@ const BuyCredit = () => {
   const [creatingOrderFor, setCreatingOrderFor] = useState(null)
 
   const initPay = async (order) => {
+    const publicKey = (import.meta.env.VITE_RAZORPAY_KEY_ID || '').trim();
+
+    if (!publicKey || publicKey.includes('YOUR_')) {
+      toast.error('Razorpay public key is missing or invalid. Add VITE_RAZORPAY_KEY_ID to client/.env.');
+      return;
+    }
+
     const options = {
-      key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+      key: publicKey,
       amount: order.amount,
       currency: order.currency,
       name: 'Credits Payments',
