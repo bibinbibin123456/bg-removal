@@ -18,7 +18,7 @@ app.use(express.json());
 // CORS
 app.use(
   cors({
-    origin:"https://bg-removal-frontend-liart.vercel.app/cd",
+    origin:"https://bg-removal-frontend-liart.vercel.app",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "token"],
