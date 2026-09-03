@@ -12,7 +12,8 @@ const PORT = process.env.PORT || 4000;
 
 const app = express();
 
-
+// Middleware
+app.use(express.json());
 
 // CORS
 app.use(
@@ -24,8 +25,7 @@ app.use(
   })
 );
 
-// Middleware
-app.use(express.json());
+
 
 // Test route
 app.get("/", (req, res) => {
