@@ -106,7 +106,9 @@ const BuyCredit = () => {
         toast.info('Payment order created. Opening checkout...');
         initPay(data.order);
       } else {
-        toast.error(data.message || 'Unable to create payment order');
+  console.log("CREATE ORDER RESPONSE:", data);
+  alert(JSON.stringify(data));
+  toast.error(data.message || 'Unable to create payment order');
       }
     } catch (error) {
       console.log(error);
